@@ -1,0 +1,1058 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI 冒險島：小偵探的科技大挑戰！</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Google Fonts 導入可愛的字體 -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@300..700&family=Noto+Sans+TC:wght@300..900&display=swap" rel="stylesheet">
+    
+    <style>
+        body {
+            font-family: 'Fredoka', 'Noto Sans TC', sans-serif;
+            background-color: #f0fdf4; /* 溫和的淺綠色背景 */
+        }
+        /* Ｑ版彈跳動畫 */
+        @keyframes bounce-slow {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-8px); }
+        }
+        .bounce-slow {
+            animation: bounce-slow 3s ease-in-out infinite;
+        }
+        /* 答錯畫面震動 */
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            10%, 30%, 50%, 70%, 90% { transform: translateX(-5px); }
+            20%, 40%, 60%, 80% { transform: translateX(5px); }
+        }
+        .shake {
+            animation: shake 0.5s ease-in-out;
+        }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col justify-between overflow-x-hidden text-slate-700 select-none">
+
+    <!-- 粒子特效畫布 (用於答對與通關時撒碎紙花) -->
+    <canvas id="effectCanvas" class="fixed inset-0 pointer-events-none z-50"></canvas>
+
+    <!-- 頂部導覽列 -->
+    <header class="bg-white/80 backdrop-blur-md border-b-4 border-emerald-200 sticky top-0 z-40 px-4 py-3 transition-all">
+        <div class="max-w-4xl mx-auto flex items-center justify-between">
+            <div class="flex items-center gap-3">
+                <span class="text-3xl">🏝️</span>
+                <div>
+                    <h1 class="text-xl md:text-2xl font-black text-emerald-600 tracking-wider">AI 冒險島</h1>
+                    <p class="text-xs text-emerald-500 font-bold">小偵探的科技大挑戰！</p>
+                </div>
+            </div>
+            <!-- 音效開關與重置 -->
+            <div class="flex items-center gap-2">
+                <button id="soundBtn" onclick="toggleSound()" class="p-2 bg-emerald-100 hover:bg-emerald-200 rounded-full transition-all text-xl" title="切換音效">
+                    🔊
+                </button>
+                <button onclick="resetGame()" class="px-3 py-1.5 bg-rose-100 hover:bg-rose-200 text-rose-600 rounded-full text-xs font-bold border border-rose-300 transition-all">
+                    重來一次 🔄
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- 主要遊戲區域 -->
+    <main class="flex-grow max-w-4xl w-full mx-auto p-4 flex flex-col justify-center">
+
+        <!-- ================= 畫面1：遊戲大廳 / 關卡選擇 ================= -->
+        <section id="lobbyScreen" class="py-6">
+            <div class="text-center mb-8">
+                <div class="inline-block relative">
+                    <span class="text-6xl md:text-8xl bounce-slow block mb-4">🕵️‍♂️🤖</span>
+                    <span class="absolute -top-2 -right-4 bg-yellow-400 text-yellow-900 text-xs font-bold px-2 py-1 rounded-full border-2 border-yellow-500 rotate-12">親子共讀推廣</span>
+                </div>
+                <h2 class="text-3xl md:text-4xl font-extrabold text-slate-800 mb-2">準備好接受 AI 的試煉了嗎？</h2>
+                <p class="text-slate-600 max-w-lg mx-auto text-sm md:text-base">
+                    根據《我和AI一起學》讀本特別打造的五大冒險關卡，跟著小夥伴們一起破關斬將，成為具備數位素養的 AI 小達人吧！
+                </p>
+            </div>
+
+            <!-- 地圖關卡選單 -->
+            <div class="grid grid-cols-1 md:grid-cols-5 gap-4 relative">
+                <!-- 虛擬連線路徑 (背景裝飾) -->
+                <div class="hidden md:block absolute top-1/2 left-8 right-8 h-1 bg-emerald-100 -translate-y-1/2 z-0"></div>
+
+                <!-- 關卡 1 -->
+                <button id="levelCard-1" onclick="startLevel(1)" class="relative bg-white border-4 border-emerald-400 rounded-2xl p-5 shadow-lg text-center transform hover:-translate-y-1 transition-all z-10 flex flex-col justify-between h-48 group">
+                    <div class="text-4xl group-hover:scale-110 transition-transform">🎮</div>
+                    <div>
+                        <div class="text-xs font-bold text-emerald-500">第一關</div>
+                        <div class="font-extrabold text-slate-800 text-sm mt-1">AI 基礎知識站</div>
+                    </div>
+                    <div class="stars-container text-yellow-400 text-sm mt-1">⭐⭐⭐</div>
+                    <span class="status-badge absolute top-2 right-2 bg-emerald-500 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full">開放中</span>
+                </button>
+
+                <!-- 關卡 2 -->
+                <button id="levelCard-2" onclick="startLevel(2)" class="relative bg-slate-100 border-4 border-slate-300 rounded-2xl p-5 shadow text-center cursor-not-allowed z-10 flex flex-col justify-between h-48 opacity-60" disabled>
+                    <div class="text-4xl">💬</div>
+                    <div>
+                        <div class="text-xs font-bold text-slate-400">第二關</div>
+                        <div class="font-extrabold text-slate-800 text-sm mt-1">AI 溝通達人</div>
+                    </div>
+                    <div class="stars-container text-yellow-400 text-sm mt-1"></div>
+                    <span class="status-badge absolute top-2 right-2 bg-slate-400 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full">鎖定中</span>
+                </button>
+
+                <!-- 關卡 3 -->
+                <button id="levelCard-3" onclick="startLevel(3)" class="relative bg-slate-100 border-4 border-slate-300 rounded-2xl p-5 shadow text-center cursor-not-allowed z-10 flex flex-col justify-between h-48 opacity-60" disabled>
+                    <div class="text-4xl">🎨</div>
+                    <div>
+                        <div class="text-xs font-bold text-slate-400">第三關</div>
+                        <div class="font-extrabold text-slate-800 text-sm mt-1">AI 創作大冒險</div>
+                    </div>
+                    <div class="stars-container text-yellow-400 text-sm mt-1"></div>
+                    <span class="status-badge absolute top-2 right-2 bg-slate-400 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full">鎖定中</span>
+                </button>
+
+                <!-- 關卡 4 -->
+                <button id="levelCard-4" onclick="startLevel(4)" class="relative bg-slate-100 border-4 border-slate-300 rounded-2xl p-5 shadow text-center cursor-not-allowed z-10 flex flex-col justify-between h-48 opacity-60" disabled>
+                    <div class="text-4xl">🔍</div>
+                    <div>
+                        <div class="text-xs font-bold text-slate-400">第四關</div>
+                        <div class="font-extrabold text-slate-800 text-sm mt-1">AI 偵探小尖兵</div>
+                    </div>
+                    <div class="stars-container text-yellow-400 text-sm mt-1"></div>
+                    <span class="status-badge absolute top-2 right-2 bg-slate-400 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full">鎖定中</span>
+                </button>
+
+                <!-- 關卡 5 -->
+                <button id="levelCard-5" onclick="startLevel(5)" class="relative bg-slate-100 border-4 border-slate-300 rounded-2xl p-5 shadow text-center cursor-not-allowed z-10 flex flex-col justify-between h-48 opacity-60" disabled>
+                    <div class="text-4xl">🏅</div>
+                    <div>
+                        <div class="text-xs font-bold text-slate-400">第五關</div>
+                        <div class="font-extrabold text-slate-800 text-sm mt-1">AI 學習與好公民</div>
+                    </div>
+                    <div class="stars-container text-yellow-400 text-sm mt-1"></div>
+                    <span class="status-badge absolute top-2 right-2 bg-slate-400 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full">鎖定中</span>
+                </button>
+            </div>
+
+            <!-- 冒險成就板 -->
+            <div class="mt-12 bg-emerald-50 border-4 border-dashed border-emerald-300 rounded-2xl p-6 text-center">
+                <h3 class="text-lg font-bold text-emerald-800 mb-2">🏆 小偵探榮譽榜</h3>
+                <p class="text-sm text-emerald-700" id="gloryText">目前成功征服了 0/5 個關卡，加油，繼續探索！</p>
+                <div class="flex justify-center gap-1 mt-3" id="gloryStars">
+                    <!-- 動態渲染收集到的星星 -->
+                </div>
+            </div>
+        </section>
+
+        <!-- ================= 畫面2：挑戰進行中 ================= -->
+        <section id="gameScreen" class="hidden py-4 max-w-2xl mx-auto w-full">
+            <!-- 頂部進度、生命值 -->
+            <div class="bg-white border-4 border-slate-700 rounded-2xl p-4 mb-4 shadow-md flex items-center justify-between">
+                <div>
+                    <span id="levelBadge" class="bg-emerald-500 text-white font-extrabold text-xs px-2.5 py-1 rounded-full">第一關：AI 基礎知識站</span>
+                    <div class="text-slate-800 font-extrabold text-sm mt-1">
+                        任務進度：<span id="questionNumText" class="text-emerald-600 text-lg">1</span> / 5
+                    </div>
+                </div>
+                <div class="text-right">
+                    <div class="text-xs text-slate-500 font-bold mb-1">小偵探防護盾 (生命值)</div>
+                    <div id="livesContainer" class="flex gap-1 justify-end text-xl">
+                        ❤️ ❤️ ❤️
+                    </div>
+                </div>
+            </div>
+
+            <!-- 題目主體 -->
+            <div id="questionContainer" class="bg-white border-4 border-slate-700 rounded-3xl p-6 shadow-xl relative min-h-[350px] flex flex-col justify-between transition-all">
+                
+                <!-- 關卡導師對話泡泡 -->
+                <div class="flex items-start gap-4 bg-emerald-50 border-2 border-emerald-200 rounded-2xl p-3 mb-6 relative">
+                    <div id="mentorAvatar" class="text-4xl bounce-slow">🦉</div>
+                    <div class="flex-grow">
+                        <div id="mentorName" class="text-xs font-bold text-emerald-600">導師 可可</div>
+                        <div id="mentorBubble" class="text-xs md:text-sm text-slate-600 mt-0.5">歡迎來到島嶼！準備好回答我的問題了嗎？</div>
+                    </div>
+                </div>
+
+                <!-- 題目敘述 -->
+                <div class="mb-6">
+                    <h3 id="questionText" class="text-base md:text-lg font-bold text-slate-800 leading-relaxed">
+                        題目載入中...
+                    </h3>
+                </div>
+
+                <!-- 選項按鈕 -->
+                <div id="optionsContainer" class="grid grid-cols-1 gap-3 mb-4">
+                    <!-- 動態生成 A, B, C, D 選項 -->
+                </div>
+
+                <!-- 答題解析與回饋區 (預設隱藏) -->
+                <div id="feedbackContainer" class="hidden border-t-2 border-slate-100 pt-4 mt-2">
+                    <div id="feedbackTitle" class="font-extrabold text-base mb-1 flex items-center gap-2">
+                        <!-- 答對/答錯文字與圖示 -->
+                    </div>
+                    <p id="feedbackExplain" class="text-xs md:text-sm text-slate-600 leading-relaxed mb-4">
+                        解析內容...
+                    </p>
+                    <div class="flex justify-end">
+                        <button id="nextBtn" onclick="nextQuestion()" class="px-6 py-2.5 bg-emerald-500 hover:bg-emerald-600 text-white rounded-full font-bold shadow-md hover:shadow-lg transition-all text-sm flex items-center gap-1">
+                            下一題 ➔
+                        </button>
+                    </div>
+                </div>
+
+            </div>
+        </section>
+
+        <!-- ================= 畫面3：關卡結算 ================= -->
+        <section id="resultScreen" class="hidden text-center py-8 max-w-md mx-auto">
+            <div class="bg-white border-4 border-slate-700 rounded-3xl p-8 shadow-2xl relative">
+                <div id="resultEmoji" class="text-8xl bounce-slow mb-4">🎉</div>
+                <h2 id="resultTitle" class="text-3xl font-extrabold text-slate-800 mb-1">關卡完成！</h2>
+                <p id="resultSubtitle" class="text-emerald-600 font-bold mb-6">你做得太棒了，小偵探！</p>
+
+                <!-- 評分星級 -->
+                <div class="bg-emerald-50 border-2 border-emerald-100 rounded-2xl py-4 px-6 mb-6">
+                    <div class="text-xs text-emerald-600 font-bold mb-1">獲得星等評價</div>
+                    <div id="resultStars" class="text-4xl text-yellow-400 tracking-wider">⭐⭐⭐</div>
+                    <p id="resultScoreMessage" class="text-sm text-slate-600 mt-2">無懈可擊！你對 AI 知識瞭若指掌！</p>
+                </div>
+
+                <!-- 操控按鈕 -->
+                <div class="flex flex-col gap-3">
+                    <button id="nextLevelLobbyBtn" onclick="backToLobby()" class="w-full py-3 bg-emerald-500 hover:bg-emerald-600 text-white rounded-xl font-bold shadow-md hover:shadow-lg transition-all text-sm">
+                        返回島嶼地圖 🗺️
+                    </button>
+                    <button id="replayLevelBtn" onclick="retryCurrentLevel()" class="w-full py-3 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl font-bold border-2 border-slate-200 transition-all text-sm">
+                        重新挑戰本關 🔄
+                    </button>
+                </div>
+            </div>
+        </section>
+
+        <!-- ================= 畫面4：全破關終極榮譽 ================= -->
+        <section id="congratsScreen" class="hidden text-center py-12 max-w-lg mx-auto">
+            <div class="bg-gradient-to-b from-yellow-50 to-amber-100 border-4 border-yellow-400 rounded-3xl p-8 shadow-2xl relative overflow-hidden">
+                <!-- 裝飾緞帶 -->
+                <div class="absolute -top-10 -left-10 w-32 h-32 bg-yellow-400 rotate-45"></div>
+                <div class="absolute -top-10 -right-10 w-32 h-32 bg-yellow-400 -rotate-45"></div>
+
+                <span class="text-8xl block bounce-slow mb-4 relative z-10">👑</span>
+                <h2 class="text-3xl md:text-4xl font-black text-slate-800 mb-2 relative z-10">恭喜全破關！</h2>
+                <p class="text-yellow-700 font-extrabold text-base mb-6">你已獲得「終極 AI 金牌偵探」稱號</p>
+
+                <p class="text-slate-600 text-sm leading-relaxed mb-6">
+                    太不可思議了！你順利通過了所有小夥伴的嚴格考驗，不僅掌握了 AI 的運作機制、溝通提示詞的技巧、還擁有看穿假訊息、幻覺以及保護隱私的安全意識，是這個時代最棒的數位公民！
+                </p>
+
+                <!-- 星星牆 -->
+                <div class="flex justify-center gap-2 text-4xl text-yellow-400 mb-8" id="goldStarsContainer">
+                    ⭐⭐⭐⭐⭐
+                </div>
+
+                <div class="bg-white/80 border-2 border-yellow-300 rounded-2xl p-4 mb-6">
+                    <p class="text-xs text-yellow-800 font-bold">📜 榮譽勳章</p>
+                    <p class="text-base font-black text-slate-800 mt-1">「智慧與誠信兼具的數位大師」</p>
+                </div>
+
+                <button onclick="resetGame()" class="w-full py-3.5 bg-emerald-500 hover:bg-emerald-600 text-white rounded-xl font-bold shadow-lg hover:shadow-xl transition-all text-base">
+                    再次展開大冒險 🌟
+                </button>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- 底部版權 -->
+    <footer class="bg-slate-800 text-slate-400 text-center py-4 text-xs font-medium border-t-4 border-slate-900 mt-6">
+        <p>© 2026 AI 冒險島 ｜ 根據《我和AI一起學》讀本教育推廣專案設計</p>
+    </footer>
+
+    <!-- 遊戲核心邏輯 -->
+    <script>
+        // ================= 1. 完整關卡題目資料結構 =================
+        const levelsData = {
+            1: {
+                title: "AI 基礎知識站",
+                mentor: { name: "可可", avatar: "🦎", desc: "沉穩謹慎且重視隱私的小夥伴" },
+                questions: [
+                    {
+                        text: "讀本中有一位角色性格沉穩謹慎，是有點神經質且重視隱私的「潛水型」人物，請問是哪一位小夥伴？",
+                        options: ["(A) 吱吱", "(B) 思思", "(C) 可可", "(D) 歐匿"],
+                        answer: 2, // (C)
+                        explain: "在《我和AI一起學》讀本中，可可是一位性格沉穩、謹慎、重視個人隱私的「潛水型」角色，提醒著大家在數位世界要保護自己。"
+                    },
+                    {
+                        text: "在讀本中，AI 被定義為什麼？",
+                        options: ["(A) 一種躲在電腦裡的魔法精靈", "(B) 一種會學習的科技工具", "(C) 一種不需要人類就能自己發明的機器", "(D) 一種只會聽從口令的遙控玩具"],
+                        answer: 1, // (B)
+                        explain: "AI 並非魔法，而是「一種會學習的科技工具」。它是透過大量資料 and 程式演算法來模仿人類學習，以協助我們解決問題。"
+                    },
+                    {
+                        text: "會幫我們寫故事、畫圖、作曲的 AI（如 ChatGPT 或 e度），屬於哪一種能力的 AI？",
+                        options: [
+                            "(A) 像人一樣能分辨「看到」和「聽到」什麼的 AI",
+                            "(B) 像人一樣能「提供建議」的 AI",
+                            "(C) 像人一樣能「創作內容」的 AI",
+                            "(D) 像人一樣能「幫忙跑腿」的 AI"
+                        ],
+                        answer: 2, // (C)
+                        explain: "像 ChatGPT 或 e度 這類能生成文字、圖片、音樂的工具，屬於「生成式 AI」，也就是「像人一樣能創作內容」的 AI。"
+                    },
+                    {
+                        text: "AI 雖然很厲害，但它不會讀心術。我們應該怎麼做才能讓 AI 幫上忙？",
+                        options: [
+                            "(A) 什麼都不說，等它自己猜",
+                            "(B) 只要說「幫我寫作業」，它就會知道該寫什麼",
+                            "(C) 像玩積木一樣，把需求與材料說明得越清楚越好",
+                            "(D) 給它隨便幾個字，它會自己上網找答案"
+                        ],
+                        answer: 2, // (C) 修正為正確的索引值：2 (選項C)
+                        explain: "我們要將自己的需求、背景條件、輸出格式等交代得越精準（就像拼接積木一樣提供清楚的組裝說明），AI 的產出才會越符合期待。"
+                    },
+                    {
+                        text: "AI 之所以能學會分辨貓和狗，甚至幫我們算數學，是因為它依靠什麼來學習？",
+                        options: [
+                            "(A) 依靠外星科技的輸入",
+                            "(B) 依靠人類給的資料指令",
+                            "(C) 依靠它自己憑空想像",
+                            "(D) 依靠大自然的能量"
+                        ],
+                        answer: 1, // (B)
+                        explain: "AI 需要人類提供大量的資料（訓練數據）與運作規則（指令演算法），它才能在這些資料中尋找規律，進而學會分辨與計算。"
+                    }
+                ]
+            },
+            2: {
+                title: "AI 溝通達人",
+                mentor: { name: "思思", avatar: "🦊", desc: "活潑聰明、善於提問的引路人" },
+                questions: [
+                    {
+                        text: "教育部因材網上的「生成式 AI 學習夥伴」叫什麼名字？",
+                        options: ["(A) e度", "(B) 酷英 (CoolE)", "(C) 狐狸貓", "(D) ChatGPT"],
+                        answer: 0, // (A)
+                        explain: "在教育部因材網中，陪伴同學們一起學習、解惑的專屬生成式 AI 學習夥伴叫做「e度」喔！"
+                    },
+                    {
+                        text: "為了讓 AI 的回答更貼近我們想要聽懂的內容，我們可以請 AI 怎麼做？",
+                        options: [
+                            "(A) 請 AI 直接給我標準答案就好",
+                            "(B) 請 AI 扮演特定的角色（例如：請扮演溫暖的自然老師）",
+                            "(C) 請 AI 越講越難，考驗它的聰明程度",
+                            "(D) 請 AI 直接幫我把考試卷寫完"
+                        ],
+                        answer: 1, // (B)
+                        explain: "透過為 AI「設定角色」（Role-play），例如：扮演國小自然老師，AI 就會自動切換為適合學生的語氣與難度來向你解說。"
+                    },
+                    {
+                        text: "和 AI 聊天時，保護自己非常重要。下列哪一件事情是「絕對不可以」告訴 AI 的？",
+                        options: [
+                            "(A) 自己喜歡的動物和顏色",
+                            "(B) 想要它幫忙解釋的數學題",
+                            "(C) 自己的姓名、學校、住址和帳號密碼",
+                            "(D) 寫作文遇到困難的想法"
+                        ],
+                        answer: 2, // (C)
+                        explain: "重要個人隱私（如姓名、地址、身分證號、學校、帳號密碼）絕對不可提供給公共 AI，避免個資外洩造成安全隱憂。"
+                    },
+                    {
+                        text: "如果老師上課講到「氣候變遷」，但你聽不懂，你應該怎麼向 AI 提問最合適？",
+                        options: [
+                            "(A) 「什麼是氣候變遷？給我 500 字解釋。」",
+                            "(B) 「請把我當成小學五年級學生，用簡單的話跟我說明什麼是氣候變遷。」",
+                            "(C) 「幫我寫一篇關於氣候變遷的作文交給老師。」",
+                            "(D) 「氣候變遷是不是騙人的？」"
+                        ],
+                        answer: 1, // (B)
+                        explain: "明確指明讀者對象（五年級學生）與難度要求（用簡單的話說明），這能幫助 AI 產出淺顯易懂、真正對學習有幫助的答覆。"
+                    },
+                    {
+                        text: "為什麼不能直接「複製貼上」AI 的答案來交作業？",
+                        options: [
+                            "(A) 因為會讓自己的「思考肌肉」變無力，失去學習的機會",
+                            "(B) 因為 AI 的字體太醜，老師會發現",
+                            "(C) 因為直接複製會讓電腦當機",
+                            "(D) 因為 AI 會跟你收費"
+                        ],
+                        answer: 0, // (A)
+                        explain: "直接抄襲 AI 答案會剥奪自身動腦、組織與表達的機會，讓我們的「思考肌肉」逐漸退化，長久下來將失去自主學習的能力。"
+                    }
+                ]
+            },
+            3: {
+                title: "AI 創作大冒險",
+                mentor: { name: "e度", avatar: "🧚‍♂️", desc: "擁有強大創造力的創作精靈" },
+                questions: [
+                    {
+                        text: "當我們想請 AI 幫忙寫一首關於「太空狗狗冒險」的詩，第一步應該給 AI 什麼資訊？",
+                        options: [
+                            "(A) 規定詩歌字數",
+                            "(B) 設定詩的「主題」與想要的「氛圍」（如勇敢、奇幻）",
+                            "(C) 告訴 AI 狗狗的品種",
+                            "(D) 請 AI 先畫一張圖"
+                        ],
+                        answer: 1, // (B)
+                        explain: "寫作前，先向 AI 描述「核心主題」與想要呈現的「情緒氛圍」（如奇幻、幽默），這能幫助 AI 正確奠定文章或詩作的基調。"
+                    },
+                    {
+                        text: "請 AI 幫忙畫班服圖案時，要清楚說明哪些元素，AI 才能畫出你心中的想像？",
+                        options: [
+                            "(A) 只要說「幫我畫圖」就好",
+                            "(B) 只需要指定衣服的顏色",
+                            "(C) 圖案的主題、風格（如卡通風）、視角與背景細節",
+                            "(D) 指定班服賣多少錢"
+                        ],
+                        answer: 2, // (C)
+                        explain: "圖像生成 AI 需要具體的視覺資訊。說明主題、風格（Q版/水彩等）、構圖視角與背景，AI 才能精準輸出你期待的設計。"
+                    },
+                    {
+                        text: "思思請「自然探究精靈」教她怎麼製作史萊姆，AI 除了提供材料和步驟，還能幫助我們什麼？",
+                        options: [
+                            "(A) 幫我們去超商買材料",
+                            "(B) 解釋玩具背後的科學原理（如化學反應）",
+                            "(C) 自動把史萊姆從螢幕裡變出來",
+                            "(D) 幫忙把弄髒的桌子清乾淨"
+                        ],
+                        answer: 1, // (B)
+                        explain: "AI 不僅提供動手做的說明，最棒的是能深入剖析背後的科學知識，帶領學生邊做邊學「聚合反應」等理化原理！"
+                    },
+                    {
+                        text: "如果你想跟著 AI 做史萊姆，卻發現家裡沒有「硼砂溶液」，你可以怎麼問 AI？",
+                        options: [
+                            "(A) 「你可以幫我買硼砂溶液嗎？」",
+                            "(B) 「沒有硼砂溶液，還可以用什麼東西替代嗎？」",
+                            "(C) 「為什麼做史萊姆一定要硼砂溶液？」",
+                            "(D) 「史萊姆好玩嗎？」"
+                        ],
+                        answer: 1, // (B)
+                        explain: "遇到資源缺乏時，可以善用 AI 來尋找「替代方案」或替代材料。這是發揮創意思考、解決實際生活問題的絕佳溝通方式。"
+                    },
+                    {
+                        text: "在跟 e度（繪圖精靈）合作畫圖生成結果後，如果覺得不滿意，可以怎麼做？",
+                        options: [
+                            "(A) 只能接受，不能修改",
+                            "(B) 把電腦關掉放棄",
+                            "(C) 用對話指令請 AI 調整細節（例如：修改視角、加入文字等）",
+                            "(D) 拜託老師幫忙畫"
+                        ],
+                        answer: 2, // (C)
+                        explain: "與 AI 創作是「迭代與協作」的過程。第一次不滿意，可以持續透過指令要求局部修改、調整顏色或微調視角，直到滿意為止。"
+                    }
+                ]
+            },
+            4: {
+                title: "AI 偵探小尖兵",
+                mentor: { name: "吱吱", avatar: "🐵", desc: "好奇心旺盛且觀察敏銳的偵探" },
+                questions: [
+                    {
+                        text: "有時候 AI 會把「根本沒發生的事」或「錯誤的答案」說得像真的一樣，這種現象稱稱為？",
+                        options: ["(A) AI 魔法", "(B) AI 幻覺", "(C) AI 讀心術", "(D) AI 病毒"],
+                        answer: 1, // (B)
+                        explain: "因為生成式 AI 的原理是預測下一個最可能出現的字，有時會胡說八道地編造出看似合理的謊言，在學術與科技界這稱為「AI 幻覺」 (Hallucination)。"
+                    },
+                    {
+                        text: "網路上有一種技術，可以把 A 的臉換到 B 的影片上，還能模仿別人的聲音製作假影片。這種技術稱為什麼？",
+                        options: ["(A) 深偽技術 (Deepfake)", "(B) 影像辨識", "(C) 擴增實境 (AR)", "(D) 語音助理"],
+                        answer: 0, // (A)
+                        explain: "深偽技術（Deepfake）利用深度學習模型合成出極為逼真的虛假影像、表情與語音，容易被不法份子用於詐騙或散播謠言。"
+                    },
+                    {
+                        text: "如果我們問 AI：「學校下個月的園遊會要準備什麼？」，AI 竟然編造出一個根本不存在的活動細節。面對這種情況，我們應該抱持什麼態度？",
+                        options: [
+                            "(A) 完全相信 AI，照著 AI 說的去準備",
+                            "(B) 要相信自己知道的事實，不能盲目相信 AI，要進行查證",
+                            "(C) 把 AI 的回答傳給全班同學",
+                            "(D) 去跟校長抗議為什麼不辦這個活動"
+                        ],
+                        answer: 1, // (B)
+                        explain: "因為 AI 不一定擁有你學校即時的行事曆資料（AI 幻覺）。凡是涉及具體事實、個人權益的事務，必須親自去官方管道（如校網或問老師）查證，不盲信。"
+                    },
+                    {
+                        text: "當在網路上看到一篇聳動的新聞或奇怪的圖片時，作為一個「小記者」，第一步應該做什麼？",
+                        options: [
+                            "(A) 按下光速分享鍵，馬上傳給好朋友",
+                            "(B) 停一停：先別急著相信，更不要急著轉傳",
+                            "(C) 在文章下方留言罵人",
+                            "(D) 馬上照著文章說的去做"
+                        ],
+                        answer: 1, // (B)
+                        explain: "「停一停、想一想、查一查」是數位公民的核心。面對聳動訊息先深呼吸、暫停轉發，確認資料來源是否可靠可信，阻止假訊息擴散。"
+                    },
+                    {
+                        text: "如果你想扮演 AI 偵探，要檢查一張圖片是不是 AI 生成的假圖，可以重點觀察哪裡？",
+                        options: [
+                            "(A) 看看圖片的顏色夠不夠鮮豔",
+                            "(B) 看看圖片有沒有加上可愛的濾鏡",
+                            "(C) 仔細檢查細節，例如手指數量對不對、背景線條和影子有沒有不自然",
+                            "(D) 看看圖片上有沒有浮水印"
+                        ],
+                        answer: 2, // (C)
+                        explain: "雖然繪圖 AI 很厲害，但在處理細微物理規律（例如手指關節、不合理的影子朝向、背景線條扭曲或文字變形）時常常出錯，是極佳的偵破點。"
+                    }
+                ]
+            },
+            5: {
+                title: "AI 學習與好公民",
+                mentor: { name: "歐匿", avatar: "🥷", desc: "維護網路正義與誠信原則的神秘客" },
+                questions: [
+                    {
+                        text: "想要練習英文口說，但不敢跟真人外國同學聊天時，可以使用哪個平臺的情境式英語聊天機器人？",
+                        options: [
+                            "(A) 均一教育平臺的狐狸貓",
+                            "(B) 教育部因材網的數學精靈",
+                            "(C) 酷英網 (Cool English) 的 CoolE Bot",
+                            "(D) PaGamO"
+                        ],
+                        answer: 2, // (C)
+                        explain: "酷英網 (Cool English) 提供了 CoolE Bot 等 AI 聊天機器人，學生能在無壓力的環境下進行多種日常生活情境的英文口說練習。"
+                    },
+                    {
+                        text: "遇到自然課「碳足跡」和「水足跡」這種複雜的科學名詞，可以請「自然探究精靈」用什麼方式呈現，會最容易比較兩者的差異？",
+                        options: [
+                            "(A) 寫一首藏頭詩",
+                            "(B) 畫一張水彩畫",
+                            "(C) 用「表格」整理兩者不同的地方",
+                            "(D) 寫一篇一千字的故事"
+                        ],
+                        answer: 2, // (C)
+                        explain: "要比較多種概念的優缺點、異同，請 AI 輸出「比較表格」能讓我們一眼看清關聯，是整理讀書筆記非常強大高效的整理技巧。"
+                    },
+                    {
+                        text: "在使用「寫作精靈」幫忙寫作文時，下列哪一種觀念是正確的？",
+                        options: [
+                            "(A) 自己完全不用思考，直接讓 AI 幫我把作文寫好",
+                            "(B) 把 AI 當作老師，它提出修改建議後，最終還是由我自己判斷要不要修改",
+                            "(C) AI 寫的詞句一定比我好，絕對不能改動它的字",
+                            "(D) 寫作精靈只能幫忙找錯字，不能幫忙構思大綱"
+                        ],
+                        answer: 1, // (B)
+                        explain: "在 AI 時代中，人類才是創作的「主體」。將 AI 的反饋視為顧問或老師的建議，經過自己思考判斷、融入個人觀點後再定稿，才是正確的協作精神。"
+                    },
+                    {
+                        text: "根據「AI 使用者紅綠燈」原則，下列哪一項行為屬於違反誠信和規則的「紅燈」行為？",
+                        options: [
+                            "(A) 用 AI 幫忙整理大綱、激發點子",
+                            "(B) 請 AI 提供寫作範例，自己消化後再寫",
+                            "(C) 將整篇作業交給 AI 代寫、造假新聞或霸凌別人",
+                            "(D) 請 AI 幫忙檢查程式碼有沒有寫錯"
+                        ],
+                        answer: 2, // (C)
+                        explain: "紅燈行為代表「禁止且不妥當的行為」。將作業完全交給 AI 代筆敷衍、利用 AI 製造虛假內容、散播假謠言甚至進行網路霸凌，皆是紅燈不道德行為。"
+                    },
+                    {
+                        text: "想當一位「負責任的 AI 使用者」，最重要的一條原則是什麼？",
+                        options: [
+                            "(A) 遇到問題絕對不問別人，只問 AI",
+                            "(B) 先有自己的原創想法，再使用 AI 協助，並且清楚標註有使用 AI 的部分",
+                            "(C) 把 AI 創作的作品說成是自己 100% 獨立完成的",
+                            "(D) 每天使用 AI 超過 10 個小時"
+                        ],
+                        answer: 1, // (B)
+                        explain: "優秀 of AI 公民應該對創作保有自主權：先思考、再協作，並在繳交成果時「誠實申報、清楚標記」有使用 AI 的部分，不剽竊、不造假。"
+                    }
+                ]
+            }
+        };
+
+        // ================= 2. 遊戲運行狀態管理 =================
+        let gameProgress = {
+            currentLevel: 1,
+            currentQuestionIdx: 0,
+            lives: 3,
+            starsEarned: { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0 },
+            unlockedLevels: [1], // 已解鎖關卡
+            completedLevels: []  // 已成功破關
+        };
+
+        let isSoundEnabled = true;
+        let selectedOptionIdx = null;
+
+        // 初始化/載入 LocalStorage 紀錄
+        window.addEventListener('load', () => {
+            loadSavedProgress();
+            initCanvas();
+            renderLobby();
+        });
+
+        // ================= 3. 音效合成器 (Web Audio API) =================
+        // 無須加載任何外部音樂檔案，全靠 JS 即時合成
+        const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+
+        function playSound(type) {
+            if (!isSoundEnabled) return;
+            // 確保 AudioContext 已啟動
+            if (audioCtx.state === 'suspended') {
+                audioCtx.resume();
+            }
+
+            const now = audioCtx.currentTime;
+
+            switch (type) {
+                case 'correct': // 答對：清亮高亢的「叮咚」
+                    {
+                        const osc1 = audioCtx.createOscillator();
+                        const gain = audioCtx.createGain();
+                        osc1.type = 'sine';
+                        osc1.frequency.setValueAtTime(523.25, now); // C5
+                        osc1.frequency.setValueAtTime(659.25, now + 0.1); // E5
+                        osc1.frequency.setValueAtTime(783.99, now + 0.2); // G5
+                        gain.gain.setValueAtTime(0.15, now);
+                        gain.gain.exponentialRampToValueAtTime(0.01, now + 0.6);
+                        osc1.connect(gain);
+                        gain.connect(audioCtx.destination);
+                        osc1.start(now);
+                        osc1.stop(now + 0.6);
+                    }
+                    break;
+                case 'wrong': // 答錯：低沈滑稽的「啵啵」
+                    {
+                        const osc1 = audioCtx.createOscillator();
+                        const gain = audioCtx.createGain();
+                        osc1.type = 'triangle';
+                        osc1.frequency.setValueAtTime(150, now);
+                        osc1.frequency.exponentialRampToValueAtTime(80, now + 0.25);
+                        gain.gain.setValueAtTime(0.2, now);
+                        gain.gain.exponentialRampToValueAtTime(0.01, now + 0.3);
+                        osc1.connect(gain);
+                        gain.connect(audioCtx.destination);
+                        osc1.start(now);
+                        osc1.stop(now + 0.3);
+                    }
+                    break;
+                case 'level_complete': // 通關：上行大調和弦
+                    {
+                        const notes = [261.63, 329.63, 392.00, 523.25, 659.25]; // C4, E4, G4, C5, E5
+                        notes.forEach((freq, idx) => {
+                            const osc = audioCtx.createOscillator();
+                            const gain = audioCtx.createGain();
+                            osc.type = 'sine';
+                            osc.frequency.setValueAtTime(freq, now + idx * 0.1);
+                            gain.gain.setValueAtTime(0.1, now + idx * 0.1);
+                            gain.gain.exponentialRampToValueAtTime(0.01, now + idx * 0.1 + 0.5);
+                            osc.connect(gain);
+                            gain.connect(audioCtx.destination);
+                            osc.start(now + idx * 0.1);
+                            osc.stop(now + idx * 0.1 + 0.5);
+                        });
+                    }
+                    break;
+                case 'victory': // 終極全破：歡快的旋律
+                    {
+                        const notes = [523.25, 587.33, 659.25, 698.46, 783.99, 880.00, 987.77, 1046.50];
+                        notes.forEach((freq, idx) => {
+                            const osc = audioCtx.createOscillator();
+                            const gain = audioCtx.createGain();
+                            osc.type = 'sine';
+                            osc.frequency.setValueAtTime(freq, now + idx * 0.15);
+                            gain.gain.setValueAtTime(0.12, now + idx * 0.15);
+                            gain.gain.exponentialRampToValueAtTime(0.01, now + idx * 0.15 + 0.4);
+                            osc.connect(gain);
+                            gain.connect(audioCtx.destination);
+                            osc.start(now + idx * 0.15);
+                            osc.stop(now + idx * 0.15 + 0.4);
+                        });
+                    }
+                    break;
+            }
+        }
+
+        function toggleSound() {
+            isSoundEnabled = !isSoundEnabled;
+            const btn = document.getElementById('soundBtn');
+            btn.innerHTML = isSoundEnabled ? '🔊' : '🔇';
+            btn.classList.toggle('bg-slate-100', !isSoundEnabled);
+            btn.classList.toggle('bg-emerald-100', isSoundEnabled);
+        }
+
+        // ================= 4. 紙花灑落特效引擎 =================
+        let canvas, ctx;
+        let particles = [];
+        const colors = ['#f43f5e', '#10b981', '#3b82f6', '#eab308', '#a855f7', '#ff7849'];
+
+        function initCanvas() {
+            canvas = document.getElementById('effectCanvas');
+            ctx = canvas.getContext('2d');
+            resizeCanvas();
+            window.addEventListener('resize', resizeCanvas);
+            requestAnimationFrame(updateParticles);
+        }
+
+        function resizeCanvas() {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+        }
+
+        function createConfetti(x, y) {
+            for (let i = 0; i < 60; i++) {
+                particles.push({
+                    x: x || window.innerWidth / 2,
+                    y: y || window.innerHeight / 2,
+                    vx: (Math.random() - 0.5) * 15,
+                    vy: (Math.random() - 0.7) * 15 - 5,
+                    size: Math.random() * 8 + 5,
+                    color: colors[Math.floor(Math.random() * colors.length)],
+                    rotation: Math.random() * 360,
+                    rotationSpeed: (Math.random() - 0.5) * 10,
+                    opacity: 1
+                });
+            }
+        }
+
+        function updateParticles() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            for (let i = particles.length - 1; i >= 0; i--) {
+                const p = particles[i];
+                p.x += p.vx;
+                p.y += p.vy;
+                p.vy += 0.3; // 重力加速度
+                p.vx *= 0.98; // 摩擦阻力
+                p.rotation += p.rotationSpeed;
+                p.opacity -= 0.015;
+
+                if (p.opacity <= 0) {
+                    particles.splice(i, 1);
+                    continue;
+                }
+
+                ctx.save();
+                ctx.globalAlpha = p.opacity;
+                ctx.translate(p.x, p.y);
+                ctx.rotate((p.rotation * Math.PI) / 180);
+                ctx.fillStyle = p.color;
+                ctx.fillRect(-p.size / 2, -p.size / 2, p.size, p.size);
+                ctx.restore();
+            }
+            requestAnimationFrame(updateParticles);
+        }
+
+        // ================= 5. 大廳與地圖渲染 =================
+        function renderLobby() {
+            // 切換視圖
+            document.getElementById('lobbyScreen').classList.remove('hidden');
+            document.getElementById('gameScreen').classList.add('hidden');
+            document.getElementById('resultScreen').classList.add('hidden');
+            document.getElementById('congratsScreen').classList.add('hidden');
+
+            let totalStars = 0;
+            // 遍歷五個關卡更新卡片狀態
+            for (let lvl = 1; lvl <= 5; lvl++) {
+                const card = document.getElementById(`levelCard-${lvl}`);
+                const statusBadge = card.querySelector('.status-badge');
+                const starsContainer = card.querySelector('.stars-container');
+                const stars = gameProgress.starsEarned[lvl] || 0;
+                totalStars += stars;
+
+                // 渲染已取得的星星
+                if (stars > 0) {
+                    starsContainer.innerHTML = '⭐'.repeat(stars);
+                } else if (gameProgress.unlockedLevels.includes(lvl)) {
+                    starsContainer.innerHTML = '⏱️ 未挑戰';
+                } else {
+                    starsContainer.innerHTML = '';
+                }
+
+                // 判斷是否鎖定
+                if (gameProgress.unlockedLevels.includes(lvl)) {
+                    card.disabled = false;
+                    card.className = "relative bg-white border-4 border-emerald-400 rounded-2xl p-5 shadow-lg text-center transform hover:-translate-y-1 transition-all z-10 flex flex-col justify-between h-48 group cursor-pointer";
+                    if (gameProgress.completedLevels.includes(lvl)) {
+                        statusBadge.innerText = "已通關";
+                        statusBadge.className = "status-badge absolute top-2 right-2 bg-blue-500 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full";
+                    } else {
+                        statusBadge.innerText = "開放中";
+                        statusBadge.className = "status-badge absolute top-2 right-2 bg-emerald-500 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full";
+                    }
+                } else {
+                    card.disabled = true;
+                    card.className = "relative bg-slate-50 border-4 border-slate-200 rounded-2xl p-5 shadow text-center cursor-not-allowed z-10 flex flex-col justify-between h-48 opacity-60";
+                    statusBadge.innerText = "鎖定中";
+                    statusBadge.className = "status-badge absolute top-2 right-2 bg-slate-400 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full";
+                }
+            }
+
+            // 榮譽榜數據更新
+            const gloryText = document.getElementById('gloryText');
+            const gloryStars = document.getElementById('gloryStars');
+            const totalLevelsCompleted = gameProgress.completedLevels.length;
+
+            gloryText.innerHTML = `目前成功征服了 <span class="text-emerald-600 font-extrabold">${totalLevelsCompleted} / 5</span> 個關卡，累計收集到 <span class="text-yellow-500 font-extrabold">${totalStars}</span> 顆冒險之星！`;
+            gloryStars.innerHTML = totalStars > 0 ? '⭐'.repeat(totalStars) : '🧩 繼續加油，收集你的第一顆星！';
+
+            // 檢測是否全通關
+            if (totalLevelsCompleted === 5) {
+                setTimeout(() => {
+                    showAllClearScreen();
+                }, 500);
+            }
+        }
+
+        // ================= 6. 核心答題流程控制 =================
+        function startLevel(lvlId) {
+            gameProgress.currentLevel = lvlId;
+            gameProgress.currentQuestionIdx = 0;
+            gameProgress.lives = 3; // 每次進入重置生命
+            selectedOptionIdx = null;
+
+            // 界面切換
+            document.getElementById('lobbyScreen').classList.add('hidden');
+            document.getElementById('gameScreen').classList.remove('hidden');
+
+            updateLivesUI();
+            loadQuestion();
+        }
+
+        function loadQuestion() {
+            const level = levelsData[gameProgress.currentLevel];
+            const qIdx = gameProgress.currentQuestionIdx;
+            const q = level.questions[qIdx];
+
+            // 元素對齊
+            document.getElementById('levelBadge').innerText = `第 ${gameProgress.currentLevel} 關：${level.title}`;
+            document.getElementById('questionNumText').innerText = qIdx + 1;
+
+            // 導師與對話框
+            document.getElementById('mentorAvatar').innerText = level.mentor.avatar;
+            document.getElementById('mentorName').innerText = `導師 ${level.mentor.name} (${level.mentor.desc})`;
+            document.getElementById('mentorBubble').innerText = `小偵探，第 ${qIdx + 1} 題來囉！仔細讀一讀，選出正確的答案！`;
+
+            // 題目與選單重置
+            document.getElementById('questionText').innerText = q.text;
+            document.getElementById('feedbackContainer').classList.add('hidden');
+
+            const optionsContainer = document.getElementById('optionsContainer');
+            optionsContainer.innerHTML = '';
+            selectedOptionIdx = null;
+
+            q.options.forEach((optText, index) => {
+                const button = document.createElement('button');
+                button.className = "w-full text-left px-5 py-3.5 bg-slate-50 hover:bg-slate-100 border-2 border-slate-200 rounded-xl font-medium text-slate-700 text-sm md:text-base transition-all flex items-center justify-between group";
+                button.innerHTML = `<span>${optText}</span> <span class="opacity-0 group-hover:opacity-100 transition-opacity text-emerald-500">✍️</span>`;
+                button.onclick = () => selectOption(index);
+                optionsContainer.appendChild(button);
+            });
+        }
+
+        function selectOption(idx) {
+            // 如果已經作答，則不理會
+            if (selectedOptionIdx !== null) return;
+            selectedOptionIdx = idx;
+
+            const level = levelsData[gameProgress.currentLevel];
+            const q = level.questions[gameProgress.currentQuestionIdx];
+            const optionsContainer = document.getElementById('optionsContainer');
+            const buttons = optionsContainer.querySelectorAll('button');
+
+            const isCorrect = (idx === q.answer);
+
+            // 更新選項狀態
+            buttons.forEach((btn, i) => {
+                btn.disabled = true;
+                if (i === q.answer) {
+                    btn.className = "w-full text-left px-5 py-3.5 bg-emerald-50 border-4 border-emerald-500 text-emerald-800 rounded-xl font-bold text-sm md:text-base flex justify-between items-center";
+                    btn.innerHTML += "<span>🟢 正確</span>";
+                } else if (i === idx) {
+                    btn.className = "w-full text-left px-5 py-3.5 bg-rose-50 border-4 border-rose-500 text-rose-800 rounded-xl font-bold text-sm md:text-base flex justify-between items-center";
+                    btn.innerHTML += "<span>🔴 答錯了</span>";
+                } else {
+                    btn.className = "w-full text-left px-5 py-3.5 bg-slate-50 border-2 border-slate-100 text-slate-300 rounded-xl text-sm md:text-base cursor-not-allowed";
+                }
+            });
+
+            // 處理答對與答錯之邏輯
+            const feedbackContainer = document.getElementById('feedbackContainer');
+            const feedbackTitle = document.getElementById('feedbackTitle');
+            const feedbackExplain = document.getElementById('feedbackExplain');
+            const mentorBubble = document.getElementById('mentorBubble');
+
+            feedbackContainer.classList.remove('hidden');
+
+            if (isCorrect) {
+                playSound('correct');
+                createConfetti();
+                feedbackTitle.className = "font-extrabold text-base mb-1 text-emerald-600 flex items-center gap-2";
+                feedbackTitle.innerHTML = `🎉 太棒了，答對了！`;
+                mentorBubble.innerText = "哇！你果然有認真閱讀、完全答對了！太厲害了！";
+            } else {
+                playSound('wrong');
+                triggerShake();
+                gameProgress.lives = Math.max(0, gameProgress.lives - 1);
+                updateLivesUI();
+                feedbackTitle.className = "font-extrabold text-base mb-1 text-rose-600 flex items-center gap-2";
+                feedbackTitle.innerHTML = `⚠️ 哎呀！答錯囉...`;
+                mentorBubble.innerText = "沒關係，學習就是在錯誤中累積經驗的。看看下方的知識卡說明吧！";
+            }
+
+            // 顯示解說與參考資料
+            feedbackExplain.innerHTML = `
+                <strong>【知識加油站】</strong><br>
+                ${q.explain}<br>
+                <span class="text-xs text-slate-400 mt-2 block">📚 參考來源：《我和AI一起學》讀本相關章節。</span>
+            `;
+
+            // 自動滾動到底部方便學生閱讀解析
+            setTimeout(() => {
+                feedbackContainer.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+            }, 100);
+        }
+
+        function triggerShake() {
+            const container = document.getElementById('questionContainer');
+            container.classList.add('shake');
+            setTimeout(() => {
+                container.classList.remove('shake');
+            }, 500);
+        }
+
+        function updateLivesUI() {
+            const container = document.getElementById('livesContainer');
+            if (gameProgress.lives <= 0) {
+                container.innerHTML = `<span class="text-xs bg-rose-500 text-white font-bold px-2 py-0.5 rounded-full">護盾歸零！</span>`;
+            } else {
+                container.innerHTML = '❤️ '.repeat(gameProgress.lives) + '🖤 '.repeat(3 - gameProgress.lives);
+            }
+        }
+
+        function nextQuestion() {
+            const qIdx = gameProgress.currentQuestionIdx;
+            const level = levelsData[gameProgress.currentLevel];
+
+            // 判斷是否生命值已耗盡或已回答完所有題目
+            if (qIdx + 1 < level.questions.length) {
+                gameProgress.currentQuestionIdx++;
+                loadQuestion();
+            } else {
+                // 本關挑戰結束，進行結算
+                completeLevel();
+            }
+        }
+
+        // ================= 7. 關卡結算與成就統計 =================
+        function completeLevel() {
+            playSound('level_complete');
+            createConfetti(window.innerWidth / 2, window.innerHeight / 3);
+
+            const activeLevel = gameProgress.currentLevel;
+            const livesLeft = gameProgress.lives;
+
+            // 計算獲得星等 (根據剩餘生命值)
+            let stars = 1;
+            if (livesLeft === 3) stars = 3;
+            else if (livesLeft === 2) stars = 2;
+
+            // 紀錄最高星等
+            if (stars > (gameProgress.starsEarned[activeLevel] || 0)) {
+                gameProgress.starsEarned[activeLevel] = stars;
+            }
+
+            // 標記通關與解鎖下一關
+            if (!gameProgress.completedLevels.includes(activeLevel)) {
+                gameProgress.completedLevels.push(activeLevel);
+            }
+
+            // 解鎖下一關
+            if (activeLevel < 5 && !gameProgress.unlockedLevels.includes(activeLevel + 1)) {
+                gameProgress.unlockedLevels.push(activeLevel + 1);
+            }
+
+            saveProgress();
+
+            // 進入結算畫面
+            document.getElementById('gameScreen').classList.add('hidden');
+            document.getElementById('resultScreen').classList.remove('hidden');
+
+            // 依據分數渲染結算
+            const resultEmoji = document.getElementById('resultEmoji');
+            const resultTitle = document.getElementById('resultTitle');
+            const resultSubtitle = document.getElementById('resultSubtitle');
+            const resultStars = document.getElementById('resultStars');
+            const resultScoreMessage = document.getElementById('resultScoreMessage');
+
+            resultStars.innerHTML = '⭐'.repeat(stars) + '☆'.repeat(3 - stars);
+            
+            if (stars === 3) {
+                resultEmoji.innerText = "👑";
+                resultTitle.innerText = "完美全對！";
+                resultSubtitle.innerText = "你已精通本關卡的知識！";
+                resultScoreMessage.innerText = "哇！不費吹灰之力就獲得了三星滿分，你是當之無愧的 AI 知識王！";
+            } else if (stars === 2) {
+                resultEmoji.innerText = "🎉";
+                resultTitle.innerText = "順利通關！";
+                resultSubtitle.innerText = "距離完美只差一點點囉！";
+                resultScoreMessage.innerText = "獲得二星榮譽！有部分的題目稍有疏忽，但還是非常優秀！";
+            } else {
+                resultEmoji.innerText = "💡";
+                resultTitle.innerText = "驚險通關！";
+                resultSubtitle.innerText = "再接再厲！";
+                resultScoreMessage.innerText = "成功通過了考驗！若想自我突破拿到三星，歡迎重新挑戰本關喔。";
+            }
+        }
+
+        function backToLobby() {
+            renderLobby();
+        }
+
+        function retryCurrentLevel() {
+            startLevel(gameProgress.currentLevel);
+        }
+
+        function showAllClearScreen() {
+            playSound('victory');
+            // 持續撒碎紙花
+            let duration = 3 * 1000;
+            let end = Date.now() + duration;
+
+            (function frame() {
+                createConfetti(Math.random() * window.innerWidth, Math.random() * window.innerHeight / 2);
+                if (Date.now() < end) {
+                    requestAnimationFrame(frame);
+                }
+            }());
+
+            document.getElementById('lobbyScreen').classList.add('hidden');
+            document.getElementById('resultScreen').classList.add('hidden');
+            document.getElementById('gameScreen').classList.add('hidden');
+            document.getElementById('congratsScreen').classList.remove('hidden');
+        }
+
+        // ================= 8. 進度存取機制 (LocalStorage) =================
+        function saveProgress() {
+            try {
+                localStorage.setItem('ai_adventure_progress_v2', JSON.stringify(gameProgress));
+            } catch (e) {
+                console.error("無法儲存遊戲進度", e);
+            }
+        }
+
+        function loadSavedProgress() {
+            try {
+                const saved = localStorage.getItem('ai_adventure_progress_v2');
+                if (saved) {
+                    gameProgress = JSON.parse(saved);
+                }
+            } catch (e) {
+                console.warn("未找到歷史存檔，將開啟新遊戲");
+            }
+        }
+
+        function resetGame() {
+            if (confirm("小偵探，你確定要清除所有的學習勳章和冒險紀錄，重新出發嗎？")) {
+                gameProgress = {
+                    currentLevel: 1,
+                    currentQuestionIdx: 0,
+                    lives: 3,
+                    starsEarned: { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0 },
+                    unlockedLevels: [1],
+                    completedLevels: []
+                };
+                saveProgress();
+                renderLobby();
+            }
+        }
+    </script>
+</body>
+</html>
